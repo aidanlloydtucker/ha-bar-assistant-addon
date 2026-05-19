@@ -9,7 +9,7 @@ The upstream stack runs separate containers for:
 - Meilisearch
 - Redis
 
-Home Assistant add-ons are single managed containers, so this add-on acts as the supervisor for those official images. It uses the Home Assistant Docker API permission to create sibling containers, stores their data under the add-on `/data` volume, and exposes a single web endpoint on port `8099`.
+Home Assistant add-ons are single managed containers, so this add-on uses the official Bar Assistant API image as its base, copies in the Salt Rim static client, and runs local Meilisearch and Redis processes inside the add-on. Persistent data is stored under the add-on `/data` volume, and the add-on exposes a single web endpoint on port `8099`.
 
 ## Configuration
 
@@ -29,7 +29,7 @@ If `meili_master_key` is left empty, the add-on generates and persists one in `/
 
 ## Notes
 
-The Bar Assistant project recommends versioned images and does not publish a `latest` tag for the application images. The defaults track the documented major versions:
+The Bar Assistant project recommends versioned images and does not publish a `latest` tag for the application images. The add-on currently tracks the documented major versions:
 
 - `barassistant/server:v5`
 - `barassistant/salt-rim:v4`

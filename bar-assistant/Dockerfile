@@ -1,5 +1,7 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base-debian:bookworm
-FROM ${BUILD_FROM}
+FROM barassistant/salt-rim:v4 AS salt-rim
+FROM getmeili/meilisearch:v1.15 AS meilisearch
+
+FROM barassistant/server:v5
 
 ARG BUILD_ARCH
 ARG BUILD_VERSION
@@ -16,11 +18,17 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
-        docker.io \
+        gettext-base \
         jq \
-        nginx \
         openssl \
+        redis-server \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /etc/nginx/sites-enabled/default
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=meilisearch /bin/meilisearch /usr/local/bin/meilisearch
+COPY --from=salt-rim --chown=www-data:www-data /var/www/html /opt/salt-rim/html
+COPY --from=salt-rim --chown=www-data:www-data /var/www/config.js /opt/salt-rim/config.js
 
 COPY rootfs /
+
+RUN chmod +x /etc/entrypoint.d/98-ha-bar-assistant-addon.sh

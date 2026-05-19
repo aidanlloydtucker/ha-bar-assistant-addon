@@ -8,13 +8,13 @@ Add this repository to Home Assistant with:
 https://github.com/aidanlloydtucker/ha-bar-assistant-addon
 ```
 
-The add-on lives in [`bar-assistant`](bar-assistant/) and adapts the documented Compose services into the add-on model:
+The add-on lives in [`bar-assistant`](bar-assistant/) and adapts the documented Compose services into a single Home Assistant managed container:
 
 - Salt Rim web client
 - Bar Assistant API
 - Meilisearch
 - Redis
 
-Because Home Assistant add-ons are single managed containers, the add-on uses `docker_api: true` to supervise the official Bar Assistant sidecar containers and exposes them through one HA-facing web port, `8099`.
+Because Home Assistant add-ons are single managed containers, the add-on bundles the Bar Assistant API, Salt Rim, Meilisearch, and Redis into one image and exposes them through one HA-facing web port, `8099`.
 
 See [`bar-assistant/README.md`](bar-assistant/README.md) for configuration details.
