@@ -91,7 +91,14 @@ start_proxy() {
     nginx -c /etc/nginx/ha-bar-assistant-addon.conf -g "daemon off;" &
 }
 
-mkdir -p /data/bar-assistant /data/meilisearch /data/redis "${BAR_STORAGE_DIR}"
+mkdir -p \
+    /data/bar-assistant \
+    /data/meilisearch \
+    /data/redis \
+    "${BAR_STORAGE_DIR}/uploads/cocktails" \
+    "${BAR_STORAGE_DIR}/uploads/ingredients" \
+    "${BAR_STORAGE_DIR}/uploads/temp" \
+    "${BAR_STORAGE_DIR}/backups"
 chown -R www-data:www-data /data/bar-assistant /data/meilisearch /data/redis "${BAR_STORAGE_DIR}" || true
 chmod -R a+rwX /data/bar-assistant /data/meilisearch /data/redis "${BAR_STORAGE_DIR}" || true
 
