@@ -35,12 +35,37 @@ set_env_file_value() {
 
 start_meilisearch() {
     log "Starting local Meilisearch"
+    export MEILI_MASTER_KEY
+    export MEILI_ENV=production
+    export MEILI_NO_ANALYTICS=true
+
     /usr/local/bin/meilisearch \
         --db-path /data/meilisearch \
-        --http-addr 127.0.0.1:7700 \
-        --env production \
-        --master-key "${MEILI_MASTER_KEY}" \
-        --no-analytics true &
+        --http-addr 127.0.0.1:7700 &
+
+    MEILI_PID="$!"
+}
+
+wait_for_meilisearch() {
+    local attempt
+
+    log "Waiting for local Meilisearch on 127.0.0.1:7700"
+    for attempt in {1..60}; do
+        if ! kill -0 "${MEILI_PID}" >/dev/null 2>&1; then
+            log "Meilisearch exited before it became ready"
+            exit 1
+        fi
+
+        if bash -c '</dev/tcp/127.0.0.1/7700' >/dev/null 2>&1; then
+            log "Local Meilisearch is accepting connections"
+            return 0
+        fi
+
+        sleep 1
+    done
+
+    log "Timed out waiting for local Meilisearch"
+    exit 1
 }
 
 start_redis() {
@@ -106,4 +131,5 @@ else
 fi
 
 start_meilisearch
+wait_for_meilisearch
 start_proxy
