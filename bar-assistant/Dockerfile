@@ -7,7 +7,7 @@ ARG BUILD_VERSION
 LABEL \
     io.hass.name="Bar Assistant" \
     io.hass.description="Bar Assistant and Salt Rim packaged for Home Assistant" \
-    io.hass.type="addon" \
+    io.hass.type="app" \
     io.hass.version=${BUILD_VERSION} \
     io.hass.arch=${BUILD_ARCH}
 

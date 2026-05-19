@@ -2,6 +2,12 @@
 
 This repository contains a Home Assistant add-on wrapper for the upstream Bar Assistant Docker setup.
 
+Add this repository to Home Assistant with:
+
+```text
+https://github.com/aidanlloydtucker/ha-bar-assistant-addon
+```
+
 The add-on lives in [`bar-assistant`](bar-assistant/) and adapts the documented Compose services into the add-on model:
 
 - Salt Rim web client
