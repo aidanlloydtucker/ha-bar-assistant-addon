@@ -15,7 +15,10 @@ LABEL \
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-RUN apt-get update \
+USER root
+
+RUN mkdir -p /var/lib/apt/lists/partial \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         gettext-base \
@@ -32,3 +35,5 @@ COPY --from=salt-rim --chown=www-data:www-data /var/www/config.js /opt/salt-rim/
 COPY rootfs /
 
 RUN chmod +x /etc/entrypoint.d/98-ha-bar-assistant-addon.sh
+
+USER root
