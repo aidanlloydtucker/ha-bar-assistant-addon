@@ -1,0 +1,129 @@
+#!/usr/bin/with-contenv bash
+set -Eeuo pipefail
+
+# shellcheck source=/dev/null
+source /usr/lib/bashio/bashio
+
+NETWORK="ha-bar-assistant"
+API_CONTAINER="ha-bar-assistant-api"
+WEB_CONTAINER="ha-bar-assistant-web"
+MEILI_CONTAINER="ha-bar-assistant-meilisearch"
+REDIS_CONTAINER="ha-bar-assistant-redis"
+
+cleanup() {
+    bashio::log.info "Stopping Bar Assistant sidecar containers"
+    docker rm -f "${WEB_CONTAINER}" "${API_CONTAINER}" "${MEILI_CONTAINER}" "${REDIS_CONTAINER}" >/dev/null 2>&1 || true
+}
+
+get_data_source() {
+    docker inspect "${HOSTNAME}" --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Source}}{{end}}{{end}}'
+}
+
+config_or_default() {
+    local key="$1"
+    local fallback="$2"
+    local value
+
+    value="$(bashio::config "${key}")"
+    if [[ -z "${value}" || "${value}" == "null" ]]; then
+        printf '%s' "${fallback}"
+    else
+        printf '%s' "${value}"
+    fi
+}
+
+run_container() {
+    local name="$1"
+    shift
+
+    docker rm -f "${name}" >/dev/null 2>&1 || true
+    docker run -d --name "${name}" --network "${NETWORK}" "$@"
+}
+
+trap cleanup EXIT TERM INT
+
+if ! docker info >/dev/null 2>&1; then
+    bashio::log.fatal "Docker API is unavailable. Keep docker_api: true in config.yaml."
+    exit 1
+fi
+
+DATA_SOURCE="$(get_data_source)"
+if [[ -z "${DATA_SOURCE}" ]]; then
+    bashio::log.fatal "Unable to resolve the host path backing /data."
+    exit 1
+fi
+
+mkdir -p /data/bar-assistant /data/meilisearch /data/redis
+chown -R 33:33 /data/bar-assistant || true
+chmod -R a+rwX /data/meilisearch /data/redis || true
+
+if [[ ! -s /data/meili_master_key ]]; then
+    openssl rand -hex 32 > /data/meili_master_key
+    chmod 600 /data/meili_master_key
+fi
+
+MEILI_MASTER_KEY="$(config_or_default 'meili_master_key' "$(cat /data/meili_master_key)")"
+API_URL="$(config_or_default 'api_url' '/bar')"
+MEILISEARCH_URL="$(config_or_default 'meilisearch_url' '/search')"
+ALLOW_REGISTRATION="$(bashio::config 'allow_registration')"
+USE_REDIS="$(bashio::config 'use_redis')"
+SERVER_IMAGE="$(bashio::config 'server_image')"
+SALT_RIM_IMAGE="$(bashio::config 'salt_rim_image')"
+MEILISEARCH_IMAGE="$(bashio::config 'meilisearch_image')"
+REDIS_IMAGE="$(bashio::config 'redis_image')"
+
+bashio::log.info "Preparing Docker network ${NETWORK}"
+docker network create "${NETWORK}" >/dev/null 2>&1 || true
+docker network connect "${NETWORK}" "${HOSTNAME}" >/dev/null 2>&1 || true
+
+bashio::log.info "Starting Meilisearch"
+run_container "${MEILI_CONTAINER}" \
+    --restart unless-stopped \
+    -v "${DATA_SOURCE}/meilisearch:/meili_data" \
+    -e MEILI_NO_ANALYTICS=true \
+    -e "MEILI_MASTER_KEY=${MEILI_MASTER_KEY}" \
+    -e MEILI_ENV=production \
+    "${MEILISEARCH_IMAGE}"
+
+REDIS_ENV=()
+if [[ "${USE_REDIS}" == "true" ]]; then
+    bashio::log.info "Starting Redis"
+    run_container "${REDIS_CONTAINER}" \
+        --restart unless-stopped \
+        -v "${DATA_SOURCE}/redis:/data" \
+        "${REDIS_IMAGE}" \
+        redis-server --appendonly yes
+
+    REDIS_ENV=(
+        -e REDIS_HOST="${REDIS_CONTAINER}"
+        -e CACHE_DRIVER=redis
+        -e SESSION_DRIVER=redis
+    )
+else
+    REDIS_ENV=(
+        -e CACHE_DRIVER=file
+        -e SESSION_DRIVER=file
+    )
+fi
+
+bashio::log.info "Starting Bar Assistant API"
+run_container "${API_CONTAINER}" \
+    --restart unless-stopped \
+    -v "${DATA_SOURCE}/bar-assistant:/var/www/cocktails/storage/bar-assistant" \
+    -e "APP_URL=${API_URL}" \
+    -e "MEILISEARCH_KEY=${MEILI_MASTER_KEY}" \
+    -e "MEILISEARCH_HOST=http://${MEILI_CONTAINER}:7700" \
+    -e "ALLOW_REGISTRATION=${ALLOW_REGISTRATION}" \
+    "${REDIS_ENV[@]}" \
+    "${SERVER_IMAGE}"
+
+bashio::log.info "Starting Salt Rim"
+run_container "${WEB_CONTAINER}" \
+    --restart unless-stopped \
+    -e "API_URL=${API_URL}" \
+    -e "MEILISEARCH_URL=${MEILISEARCH_URL}" \
+    "${SALT_RIM_IMAGE}"
+
+bashio::log.info "Bar Assistant is available on the add-on web port"
+nginx -g "daemon off;" &
+wait "$!"

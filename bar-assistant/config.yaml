@@ -1,0 +1,37 @@
+name: Bar Assistant
+version: "0.1.0"
+slug: bar_assistant
+description: Bar Assistant and Salt Rim packaged for Home Assistant.
+url: https://docs.barassistant.app/setup/
+arch:
+  - amd64
+  - aarch64
+startup: application
+boot: auto
+init: false
+docker_api: true
+ports:
+  8099/tcp: 8099
+ports_description:
+  8099/tcp: Salt Rim web client and reverse proxy
+webui: http://[HOST]:[PORT:8099]
+options:
+  allow_registration: true
+  api_url: /bar
+  meilisearch_url: /search
+  meili_master_key: ""
+  use_redis: true
+  server_image: barassistant/server:v5
+  salt_rim_image: barassistant/salt-rim:v4
+  meilisearch_image: getmeili/meilisearch:v1.15
+  redis_image: redis:7-alpine
+schema:
+  allow_registration: bool
+  api_url: str
+  meilisearch_url: str
+  meili_master_key: password?
+  use_redis: bool
+  server_image: str
+  salt_rim_image: str
+  meilisearch_image: str
+  redis_image: str
