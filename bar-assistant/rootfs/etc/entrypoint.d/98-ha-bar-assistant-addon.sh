@@ -2,6 +2,7 @@
 set -eu
 
 APP_BASE_DIR="${APP_BASE_DIR:-/var/www/cocktails}"
+BAR_STORAGE_DIR="${APP_BASE_DIR}/storage/bar-assistant"
 OPTIONS_FILE="/data/options.json"
 
 log() {
@@ -90,14 +91,15 @@ start_proxy() {
     nginx -c /etc/nginx/ha-bar-assistant-addon.conf -g "daemon off;" &
 }
 
-mkdir -p /data/bar-assistant /data/meilisearch /data/redis
-chown -R www-data:www-data /data/bar-assistant /data/meilisearch /data/redis || true
-chmod -R u+rwX,g+rwX /data/bar-assistant /data/meilisearch /data/redis || true
+mkdir -p /data/bar-assistant /data/meilisearch /data/redis "${BAR_STORAGE_DIR}"
+chown -R www-data:www-data /data/bar-assistant /data/meilisearch /data/redis "${BAR_STORAGE_DIR}" || true
+chmod -R a+rwX /data/bar-assistant /data/meilisearch /data/redis "${BAR_STORAGE_DIR}" || true
 
-if [ -e /data/bar-assistant/database.ba3.sqlite ]; then
-    chown www-data:www-data /data/bar-assistant/database.ba3.sqlite || true
-    chmod 664 /data/bar-assistant/database.ba3.sqlite || true
+if [ ! -e "${BAR_STORAGE_DIR}/database.ba3.sqlite" ]; then
+    touch "${BAR_STORAGE_DIR}/database.ba3.sqlite"
 fi
+chown www-data:www-data "${BAR_STORAGE_DIR}/database.ba3.sqlite" || true
+chmod 666 "${BAR_STORAGE_DIR}/database.ba3.sqlite" || true
 
 if [ ! -s /data/meili_master_key ]; then
     openssl rand -hex 32 > /data/meili_master_key
