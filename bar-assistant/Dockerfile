@@ -36,6 +36,8 @@ COPY --from=salt-rim --chown=www-data:www-data /var/www/config.js /opt/salt-rim/
 
 COPY rootfs /
 
-RUN chmod +x /etc/entrypoint.d/98-ha-bar-assistant-addon.sh /usr/bin/meilisearch
+RUN rm -rf /var/www/cocktails/storage/bar-assistant \
+    && ln -s /data/bar-assistant /var/www/cocktails/storage/bar-assistant \
+    && chmod +x /etc/entrypoint.d/98-ha-bar-assistant-addon.sh /usr/bin/meilisearch
 
 USER root

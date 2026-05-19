@@ -93,13 +93,6 @@ start_proxy() {
 mkdir -p /data/bar-assistant /data/meilisearch /data/redis
 chown -R www-data:www-data /data/bar-assistant /data/meilisearch /data/redis || true
 
-if [ -d "${APP_BASE_DIR}/storage/bar-assistant" ] && [ ! -L "${APP_BASE_DIR}/storage/bar-assistant" ]; then
-    rm -rf "${APP_BASE_DIR}/storage/bar-assistant"
-fi
-
-ln -sfn /data/bar-assistant "${APP_BASE_DIR}/storage/bar-assistant"
-chown -h www-data:www-data "${APP_BASE_DIR}/storage/bar-assistant" || true
-
 if [ ! -s /data/meili_master_key ]; then
     openssl rand -hex 32 > /data/meili_master_key
     chmod 600 /data/meili_master_key

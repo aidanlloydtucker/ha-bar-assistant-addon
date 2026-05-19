@@ -8,7 +8,6 @@ The upstream stack runs separate containers for:
 - Bar Assistant API
 - Meilisearch
 - Redis
-- foobar
 
 Home Assistant add-ons are single managed containers, so this add-on uses the official Bar Assistant API image as its base, copies in the Salt Rim static client, and runs local Meilisearch and Redis processes inside the add-on. Persistent data is stored under the add-on `/data` volume, and the add-on exposes a single web endpoint on port `8099`.
 
