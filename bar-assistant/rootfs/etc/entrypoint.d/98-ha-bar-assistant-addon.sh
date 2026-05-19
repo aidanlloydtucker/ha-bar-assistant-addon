@@ -92,6 +92,12 @@ start_proxy() {
 
 mkdir -p /data/bar-assistant /data/meilisearch /data/redis
 chown -R www-data:www-data /data/bar-assistant /data/meilisearch /data/redis || true
+chmod -R u+rwX,g+rwX /data/bar-assistant /data/meilisearch /data/redis || true
+
+if [ -e /data/bar-assistant/database.ba3.sqlite ]; then
+    chown www-data:www-data /data/bar-assistant/database.ba3.sqlite || true
+    chmod 664 /data/bar-assistant/database.ba3.sqlite || true
+fi
 
 if [ ! -s /data/meili_master_key ]; then
     openssl rand -hex 32 > /data/meili_master_key
