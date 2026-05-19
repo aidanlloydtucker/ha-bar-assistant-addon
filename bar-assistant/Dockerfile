@@ -28,12 +28,14 @@ RUN mkdir -p /var/lib/apt/lists/partial \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=meilisearch /bin/meilisearch /usr/local/bin/meilisearch
+COPY --from=meilisearch /bin/meilisearch /usr/bin/meilisearch
+COPY --from=meilisearch /lib/ld-musl-*.so.1 /lib/
+COPY --from=meilisearch /usr/lib/libgcc_s.so.1 /usr/lib/
 COPY --from=salt-rim --chown=www-data:www-data /var/www/html /opt/salt-rim/html
 COPY --from=salt-rim --chown=www-data:www-data /var/www/config.js /opt/salt-rim/config.js
 
 COPY rootfs /
 
-RUN chmod +x /etc/entrypoint.d/98-ha-bar-assistant-addon.sh
+RUN chmod +x /etc/entrypoint.d/98-ha-bar-assistant-addon.sh /usr/bin/meilisearch
 
 USER root

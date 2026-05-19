@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-set -Eeuo pipefail
+#!/usr/bin/env sh
+set -eu
 
 APP_BASE_DIR="${APP_BASE_DIR:-/var/www/cocktails}"
 OPTIONS_FILE="/data/options.json"
@@ -9,10 +9,10 @@ log() {
 }
 
 config() {
-    local key="$1"
-    local fallback="$2"
+    key="$1"
+    fallback="$2"
 
-    if [[ -f "${OPTIONS_FILE}" ]]; then
+    if [ -f "${OPTIONS_FILE}" ]; then
         jq -r --arg key "${key}" --arg fallback "${fallback}" '.[$key] // $fallback' "${OPTIONS_FILE}"
     else
         printf '%s\n' "${fallback}"
@@ -20,10 +20,9 @@ config() {
 }
 
 set_env_file_value() {
-    local key="$1"
-    local value="$2"
-    local env_file="${APP_BASE_DIR}/.env"
-    local tmp_file
+    key="$1"
+    value="$2"
+    env_file="${APP_BASE_DIR}/.env"
 
     tmp_file="$(mktemp)"
     touch "${env_file}"
@@ -39,7 +38,7 @@ start_meilisearch() {
     export MEILI_ENV=production
     export MEILI_NO_ANALYTICS=true
 
-    /usr/local/bin/meilisearch \
+    /usr/bin/meilisearch \
         --db-path /data/meilisearch \
         --http-addr 127.0.0.1:7700 &
 
@@ -47,10 +46,10 @@ start_meilisearch() {
 }
 
 wait_for_meilisearch() {
-    local attempt
+    attempt=1
 
     log "Waiting for local Meilisearch on 127.0.0.1:7700"
-    for attempt in {1..60}; do
+    while [ "${attempt}" -le 60 ]; do
         if ! kill -0 "${MEILI_PID}" >/dev/null 2>&1; then
             log "Meilisearch exited before it became ready"
             exit 1
@@ -62,6 +61,7 @@ wait_for_meilisearch() {
         fi
 
         sleep 1
+        attempt=$((attempt + 1))
     done
 
     log "Timed out waiting for local Meilisearch"
@@ -93,14 +93,14 @@ start_proxy() {
 mkdir -p /data/bar-assistant /data/meilisearch /data/redis
 chown -R www-data:www-data /data/bar-assistant /data/meilisearch /data/redis || true
 
-if [[ -d "${APP_BASE_DIR}/storage/bar-assistant" && ! -L "${APP_BASE_DIR}/storage/bar-assistant" ]]; then
+if [ -d "${APP_BASE_DIR}/storage/bar-assistant" ] && [ ! -L "${APP_BASE_DIR}/storage/bar-assistant" ]; then
     rm -rf "${APP_BASE_DIR}/storage/bar-assistant"
 fi
 
 ln -sfn /data/bar-assistant "${APP_BASE_DIR}/storage/bar-assistant"
 chown -h www-data:www-data "${APP_BASE_DIR}/storage/bar-assistant" || true
 
-if [[ ! -s /data/meili_master_key ]]; then
+if [ ! -s /data/meili_master_key ]; then
     openssl rand -hex 32 > /data/meili_master_key
     chmod 600 /data/meili_master_key
 fi
@@ -111,7 +111,7 @@ ALLOW_REGISTRATION="$(config 'allow_registration' 'true')"
 USE_REDIS="$(config 'use_redis' 'true')"
 MEILI_MASTER_KEY="$(config 'meili_master_key' '')"
 
-if [[ -z "${MEILI_MASTER_KEY}" || "${MEILI_MASTER_KEY}" == "null" ]]; then
+if [ -z "${MEILI_MASTER_KEY}" ] || [ "${MEILI_MASTER_KEY}" = "null" ]; then
     MEILI_MASTER_KEY="$(cat /data/meili_master_key)"
 fi
 
@@ -120,7 +120,7 @@ set_env_file_value MEILISEARCH_KEY "${MEILI_MASTER_KEY}"
 set_env_file_value MEILISEARCH_HOST "http://127.0.0.1:7700"
 set_env_file_value ALLOW_REGISTRATION "${ALLOW_REGISTRATION}"
 
-if [[ "${USE_REDIS}" == "true" ]]; then
+if [ "${USE_REDIS}" = "true" ]; then
     set_env_file_value REDIS_HOST "127.0.0.1"
     set_env_file_value CACHE_DRIVER "redis"
     set_env_file_value SESSION_DRIVER "redis"
