@@ -1,8 +1,5 @@
-#!/usr/bin/with-contenv bash
+#!/usr/bin/with-contenv bashio
 set -Eeuo pipefail
-
-# shellcheck source=/dev/null
-source /usr/lib/bashio/bashio
 
 NETWORK="ha-bar-assistant"
 API_CONTAINER="ha-bar-assistant-api"
