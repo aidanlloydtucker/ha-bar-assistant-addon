@@ -1,5 +1,5 @@
 name: Bar Assistant
-version: "0.1.0"
+version: "0.1.1"
 slug: bar_assistant
 description: Bar Assistant and Salt Rim packaged for Home Assistant.
 url: https://docs.barassistant.app/setup/
@@ -26,3 +26,5 @@ schema:
   meilisearch_url: str
   meili_master_key: password?
   use_redis: bool
+ingress: true
+panel_icon: mdi:glass-cocktail
