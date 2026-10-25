@@ -1,7 +1,7 @@
-FROM barassistant/salt-rim:v4 AS salt-rim
-FROM getmeili/meilisearch:v1.15 AS meilisearch
+FROM barassistant/salt-rim:v5 AS salt-rim
+FROM getmeili/meilisearch:v1.50 AS meilisearch
 
-FROM barassistant/server:v5
+FROM barassistant/server:v6
 
 ARG BUILD_ARCH
 ARG BUILD_VERSION
@@ -34,10 +34,13 @@ COPY --from=meilisearch /usr/lib/libgcc_s.so.1 /usr/lib/
 COPY --from=salt-rim --chown=www-data:www-data /var/www/html /opt/salt-rim/html
 COPY --from=salt-rim --chown=www-data:www-data /var/www/config.js /opt/salt-rim/config.js
 
+# The base image declares storage/bar-assistant as a VOLUME, so Docker mounts an
+# anonymous volume there (through any symlink) on every container recreation.
+# Point Laravel's whole storage directory at the add-on's persistent /data instead.
+ENV LARAVEL_STORAGE_PATH=/data/storage
+
 COPY rootfs /
 
-RUN rm -rf /var/www/cocktails/storage/bar-assistant \
-    && ln -s /data/bar-assistant /var/www/cocktails/storage/bar-assistant \
-    && chmod +x /etc/entrypoint.d/98-ha-bar-assistant-addon.sh /usr/bin/meilisearch
+RUN chmod +x /etc/entrypoint.d/98-ha-bar-assistant-addon.sh /usr/bin/meilisearch
 
 USER root

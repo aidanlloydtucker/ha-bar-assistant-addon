@@ -2,7 +2,7 @@
 set -eu
 
 APP_BASE_DIR="${APP_BASE_DIR:-/var/www/cocktails}"
-BAR_STORAGE_DIR="${APP_BASE_DIR}/storage/bar-assistant"
+BAR_STORAGE_DIR="${LARAVEL_STORAGE_PATH}/bar-assistant"
 OPTIONS_FILE="/data/options.json"
 
 log() {
@@ -41,6 +41,7 @@ start_meilisearch() {
 
     /usr/bin/meilisearch \
         --db-path /data/meilisearch \
+        --experimental-dumpless-upgrade \
         --http-addr 127.0.0.1:7700 &
 
     MEILI_PID="$!"
@@ -81,7 +82,7 @@ start_redis() {
 
 start_proxy() {
     log "Preparing Salt Rim config"
-    export API_URL MEILISEARCH_URL
+    export API_URL MEILISEARCH_URL ALLOW_REGISTRATION
     envsubst < /opt/salt-rim/config.js > /opt/salt-rim/html/config.js
 
     CONFIG_HASH="$(md5sum /opt/salt-rim/html/config.js | cut -d' ' -f1)"
@@ -91,16 +92,19 @@ start_proxy() {
     nginx -c /etc/nginx/ha-bar-assistant-addon.conf -g "daemon off;" &
 }
 
+# Seed Laravel's storage skeleton (framework/, logs/, ...) without overwriting data.
+mkdir -p "${LARAVEL_STORAGE_PATH}"
+cp -an "${APP_BASE_DIR}/storage/." "${LARAVEL_STORAGE_PATH}/"
+
 mkdir -p \
-    /data/bar-assistant \
     /data/meilisearch \
     /data/redis \
     "${BAR_STORAGE_DIR}/uploads/cocktails" \
     "${BAR_STORAGE_DIR}/uploads/ingredients" \
     "${BAR_STORAGE_DIR}/uploads/temp" \
     "${BAR_STORAGE_DIR}/backups"
-chown -R www-data:www-data /data/bar-assistant /data/meilisearch /data/redis "${BAR_STORAGE_DIR}" || true
-chmod -R a+rwX /data/bar-assistant /data/meilisearch /data/redis "${BAR_STORAGE_DIR}" || true
+chown -R www-data:www-data "${LARAVEL_STORAGE_PATH}" /data/meilisearch /data/redis || true
+chmod -R a+rwX "${LARAVEL_STORAGE_PATH}" /data/meilisearch /data/redis || true
 
 if [ ! -e "${BAR_STORAGE_DIR}/database.ba3.sqlite" ]; then
     touch "${BAR_STORAGE_DIR}/database.ba3.sqlite"

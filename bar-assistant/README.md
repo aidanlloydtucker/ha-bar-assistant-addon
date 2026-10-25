@@ -9,7 +9,7 @@ The upstream stack runs separate containers for:
 - Meilisearch
 - Redis
 
-Home Assistant add-ons are single managed containers, so this add-on uses the official Bar Assistant API image as its base, copies in the Salt Rim static client, and runs local Meilisearch and Redis processes inside the add-on. Persistent data is stored under the add-on `/data` volume, and the add-on exposes a single web endpoint on port `8099`.
+Home Assistant add-ons are single managed containers, so this add-on uses the official Bar Assistant API image as its base, copies in the Salt Rim static client, and runs local Meilisearch and Redis processes inside the add-on. Persistent data is stored under the add-on `/data` volume (Laravel storage, including the SQLite database and uploads, in `/data/storage`), and the add-on exposes a single web endpoint on port `8099`.
 
 ## Configuration
 
@@ -31,6 +31,10 @@ If `meili_master_key` is left empty, the add-on generates and persists one in `/
 
 The Bar Assistant project recommends versioned images and does not publish a `latest` tag for the application images. The add-on currently tracks the documented major versions:
 
-- `barassistant/server:v5`
-- `barassistant/salt-rim:v4`
-- `getmeili/meilisearch:v1.15`
+- `barassistant/server:v6`
+- `barassistant/salt-rim:v5`
+- `getmeili/meilisearch:v1.50`
+
+Meilisearch runs with `--experimental-dumpless-upgrade`, so its index is upgraded in place when the bundled version changes.
+
+There is no Home Assistant ingress panel. Salt Rim only works at the root of a domain, and ingress serves add-ons under `/api/hassio_ingress/<token>/`, so open the web UI on port `8099` instead.
