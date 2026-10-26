@@ -31,11 +31,11 @@ If `meili_master_key` is left empty, the add-on generates and persists one in `/
 
 ## Notes
 
-The Bar Assistant project recommends versioned images and does not publish a `latest` tag for the application images. The add-on currently tracks the documented major versions:
+The Bar Assistant project recommends versioned images and does not publish a `latest` tag for the application images. The add-on pins exact releases, so a rebuild never pulls new code. Auto-login depends on Salt Rim's SSO callback and stored login state, so retest it when bumping these:
 
-- `barassistant/server:v6`
-- `barassistant/salt-rim:v5`
-- `getmeili/meilisearch:v1.50`
+- `barassistant/server:6.9.1`
+- `barassistant/salt-rim:5.8.0`
+- `getmeili/meilisearch:v1.50.0`
 
 Meilisearch runs with `--experimental-dumpless-upgrade`, so its index is upgraded in place when the bundled version changes.
 

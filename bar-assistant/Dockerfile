@@ -1,7 +1,9 @@
-FROM barassistant/salt-rim:v5 AS salt-rim
-FROM getmeili/meilisearch:v1.50 AS meilisearch
+# Pinned: auto-login depends on Salt Rim's SSO callback and stored state, so
+# upgrade these deliberately and retest.
+FROM barassistant/salt-rim:5.8.0 AS salt-rim
+FROM getmeili/meilisearch:v1.50.0 AS meilisearch
 
-FROM barassistant/server:v6
+FROM barassistant/server:6.9.1
 
 ARG BUILD_ARCH
 ARG BUILD_VERSION
