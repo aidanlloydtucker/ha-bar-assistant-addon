@@ -41,6 +41,7 @@ ENV LARAVEL_STORAGE_PATH=/data/storage
 
 COPY rootfs /
 
-RUN chmod +x /etc/entrypoint.d/98-ha-bar-assistant-addon.sh /usr/bin/meilisearch
+RUN chmod +x /etc/entrypoint.d/98-ha-bar-assistant-addon.sh /usr/bin/meilisearch \
+    && sed -i 's|</head>|<script src="/ha-autologin.js"></script></head>|' /opt/salt-rim/html/index.html
 
 USER root

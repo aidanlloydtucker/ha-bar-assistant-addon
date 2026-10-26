@@ -25,6 +25,8 @@ If the Salt Rim client cannot reach the API with relative URLs in your browser, 
 - `api_url`: `http://homeassistant.local:8099/bar`
 - `meilisearch_url`: `http://homeassistant.local:8099/search`
 
+`auto_login` signs every browser that opens the web UI in as the first registered user, with no password. Anyone who can reach port `8099` gets that account, so only enable it on a trusted network. It works by issuing a normal 14-day login token through Salt Rim's SSO callback; logging out and reloading signs you back in.
+
 If `meili_master_key` is left empty, the add-on generates and persists one in `/data/meili_master_key`.
 
 ## Notes

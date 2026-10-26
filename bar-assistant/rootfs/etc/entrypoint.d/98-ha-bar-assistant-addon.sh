@@ -88,6 +88,15 @@ start_proxy() {
     CONFIG_HASH="$(md5sum /opt/salt-rim/html/config.js | cut -d' ' -f1)"
     sed -i "s|<script src=\"/config.js\"></script>|<script src=\"/config.js?v=${CONFIG_HASH}\"></script>|g" /opt/salt-rim/html/index.html
 
+    if [ "${AUTO_LOGIN}" = "true" ]; then
+        log "Auto-login is enabled for the first registered user"
+        cp /opt/ha-autologin/nginx.conf /etc/nginx/ha-autologin.conf
+        cp /opt/ha-autologin/autologin.js /opt/salt-rim/html/ha-autologin.js
+    else
+        : > /etc/nginx/ha-autologin.conf
+        : > /opt/salt-rim/html/ha-autologin.js
+    fi
+
     log "Starting add-on web proxy on port 8099"
     nginx -c /etc/nginx/ha-bar-assistant-addon.conf -g "daemon off;" &
 }
@@ -120,6 +129,7 @@ fi
 API_URL="$(config 'api_url' '/bar')"
 MEILISEARCH_URL="$(config 'meilisearch_url' '/search')"
 ALLOW_REGISTRATION="$(config 'allow_registration' 'true')"
+AUTO_LOGIN="$(config 'auto_login' 'false')"
 USE_REDIS="$(config 'use_redis' 'true')"
 MEILI_MASTER_KEY="$(config 'meili_master_key' '')"
 

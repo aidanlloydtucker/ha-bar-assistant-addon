@@ -1,5 +1,5 @@
 name: Bar Assistant
-version: "0.2.0"
+version: "0.3.0"
 slug: bar_assistant
 description: Bar Assistant and Salt Rim packaged for Home Assistant.
 url: https://docs.barassistant.app/setup/
@@ -16,12 +16,14 @@ ports_description:
 webui: http://[HOST]:[PORT:8099]
 options:
   allow_registration: true
+  auto_login: false
   api_url: /bar
   meilisearch_url: /search
   meili_master_key: ""
   use_redis: true
 schema:
   allow_registration: bool
+  auto_login: bool
   api_url: str
   meilisearch_url: str
   meili_master_key: password?
