@@ -14,7 +14,8 @@ config() {
     fallback="$2"
 
     if [ -f "${OPTIONS_FILE}" ]; then
-        jq -r --arg key "${key}" --arg fallback "${fallback}" '.[$key] // $fallback' "${OPTIONS_FILE}"
+        # Not `.[$key] // $fallback`: jq's // also replaces false.
+        jq -r --arg key "${key}" --arg fallback "${fallback}" 'if .[$key] == null then $fallback else .[$key] end' "${OPTIONS_FILE}"
     else
         printf '%s\n' "${fallback}"
     fi

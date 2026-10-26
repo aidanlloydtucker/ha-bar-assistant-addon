@@ -1,5 +1,5 @@
 name: Bar Assistant
-version: "0.4.0"
+version: "0.4.1"
 slug: bar_assistant
 description: Bar Assistant and Salt Rim packaged for Home Assistant.
 url: https://docs.barassistant.app/setup/
